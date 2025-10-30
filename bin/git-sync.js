@@ -7,7 +7,7 @@ const configLoader = require('../lib/config-loader');
 program
   .name('git-sync')
   .description('Git多仓库同步工具 - 基于文本配置文件')
-  .version('1.0.0');
+  .version(require('../package.json').version);
 
 // 初始化命令
 program
@@ -49,12 +49,15 @@ program
     }
   });
 
-// 提交命令
+// 提交命令 - 修复版本
 program
   .command('commit <message>')
   .description('提交代码到所有配置的远程仓库')
   .option('-p, --push', '提交后自动推送')
   .option('-a, --all', '提交所有更改')
+  .option('-f, --force', '推送时强制覆盖')
+  .option('-u, --set-upstream', '推送时设置上游分支')
+  .option('--force-with-lease', '推送时使用更安全的force-with-lease')
   .action((message, options) => {
     try {
       const engine = new SyncEngine();
@@ -70,6 +73,7 @@ program
   .description('推送到所有配置的远程仓库')
   .option('-f, --force', '强制推送')
   .option('-u, --set-upstream', '设置上游分支')
+  .option('--force-with-lease', '使用更安全的force-with-lease')
   .action((options) => {
     try {
       const engine = new SyncEngine();
@@ -84,6 +88,7 @@ program
   .command('pull')
   .description('从所有配置的远程仓库拉取')
   .option('-r, --rebase', '使用rebase方式合并')
+  .option('--merge-mirrors', '对镜像远程执行合并（默认仅fetch）')
   .action((options) => {
     try {
       const engine = new SyncEngine();
