@@ -1,22 +1,63 @@
 {
-  "name": "git-sync-tool",
+  "name": "git-multi-sync-tool",
   "version": "1.0.0",
-  "description": "Git多仓库同步工具 - 基于文本配置文件",
+  "description": "基于文本配置的Git多仓库同步工具，支持一键推送到多个远程仓库",
   "main": "lib/sync-engine.js",
   "bin": {
     "git-sync": "./bin/git-sync.js",
     "gits": "./bin/git-sync.js"
   },
   "scripts": {
-    "test": "echo \"测试模式\""
+    "test:integration": "node test/integration-test.js",
+    "local:install": "npm pack && npm install -g git-multi-sync-tool-1.0.0.tgz",
+    "local:test": "npm run local:install && echo '开始本地测试...'",
+    "test": "node test/simple-test.js",
+    "test:full": "node test/integration-test.js",
+    "test:local": "node scripts/test-local.js",
+    "prepack": "npm test",
+    "prepublishOnly": "npm run test:full",
+    "dry-run": "npm pack && tar -tzf git-multi-sync-tool-*.tgz",
+    "version:patch": "npm version patch",
+    "version:minor": "npm version minor",
+    "version:major": "npm version major",
+    "release": "npm run test:full && npm run dry-run && npm publish"
   },
-  "keywords": ["git", "sync", "multiple", "remote", "config"],
-  "author": "Your Name",
+  "keywords": [
+    "git",
+    "sync",
+    "multiple",
+    "remote",
+    "repository",
+    "batch",
+    "push",
+    "pull"
+  ],
+  "author": "Your Name <your.email@example.com>",
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/YangHuangYao/git-sync-tool"
+  },
+  "bugs": {
+    "url": "https://github.com/YangHuangYao/git-sync-tool/issues"
+  },
+  "homepage": "https://github.com/YangHuangYao/git-sync-tool#readme",
+  "engines": {
+    "node": ">=12.0.0"
+  },
+  "files": [
+    "bin/",
+    "lib/",
+    "README.md",
+    "LICENSE"
+  ],
   "dependencies": {
     "chalk": "^4.1.2",
     "commander": "^9.4.1",
     "inquirer": "^8.2.5",
     "fs-extra": "^11.1.0"
+  },
+  "devDependencies": {
+    "mock-fs": "^5.1.4"
   }
 }
