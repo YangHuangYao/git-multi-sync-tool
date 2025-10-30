@@ -1,6 +1,6 @@
 {
   "name": "git-multi-sync-tool",
-  "version": "1.0.1",
+  "version": "1.0.3",
   "description": "基于文本配置的Git多仓库同步工具，支持一键推送到多个远程仓库",
   "main": "lib/sync-engine.js",
   "bin": {
@@ -10,6 +10,7 @@
   "scripts": {
     "test": "node test/simple-test.js",
     "test:full": "node scripts/test-publish.js",
+    "test:debug": "node scripts/debug-commit.js",
     "prepublishOnly": "npm test",
     "dry-run": "npm pack --dry-run",
     "version:patch": "npm version patch",
@@ -38,7 +39,7 @@
   },
   "homepage": "https://github.com/YangHuangYao/git-sync-tool#readme",
   "engines": {
-    "node": ">=12.0.0"
+    "node": ">=14.14.0"
   },
   "files": [
     "bin/",
@@ -49,7 +50,6 @@
   "dependencies": {
     "chalk": "^4.1.2",
     "commander": "^9.4.1",
-    "inquirer": "^8.2.5",
     "fs-extra": "^11.1.0"
   },
   "devDependencies": {
