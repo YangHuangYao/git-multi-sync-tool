@@ -1,0 +1,22 @@
+{
+  "name": "git-sync-tool",
+  "version": "1.0.0",
+  "description": "Git多仓库同步工具 - 基于文本配置文件",
+  "main": "lib/sync-engine.js",
+  "bin": {
+    "git-sync": "./bin/git-sync.js",
+    "gits": "./bin/git-sync.js"
+  },
+  "scripts": {
+    "test": "echo \"测试模式\""
+  },
+  "keywords": ["git", "sync", "multiple", "remote", "config"],
+  "author": "Your Name",
+  "license": "MIT",
+  "dependencies": {
+    "chalk": "^4.1.2",
+    "commander": "^9.4.1",
+    "inquirer": "^8.2.5",
+    "fs-extra": "^11.1.0"
+  }
+}
