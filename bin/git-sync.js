@@ -1,11 +1,6 @@
 #!/usr/bin/env node
-// bin/git-sync.js
 const { program } = require('commander');
-const inquirer = require('inquirer');
 const chalk = require('chalk');
-const fs = require('fs-extra');
-const path = require('path');
-
 const SyncEngine = require('../lib/sync-engine');
 const configLoader = require('../lib/config-loader');
 
@@ -28,7 +23,7 @@ program
     }
   });
 
-// 显示配置
+// 配置查看命令
 program
   .command('config')
   .description('显示当前配置')
@@ -41,7 +36,7 @@ program
     }
   });
 
-// 设置远程仓库
+// 设置远程仓库命令
 program
   .command('setup')
   .description('根据配置文件设置远程仓库')
@@ -54,7 +49,22 @@ program
     }
   });
 
-// 推送到所有仓库
+// 提交命令
+program
+  .command('commit <message>')
+  .description('提交代码到所有配置的远程仓库')
+  .option('-p, --push', '提交后自动推送')
+  .option('-a, --all', '提交所有更改')
+  .action((message, options) => {
+    try {
+      const engine = new SyncEngine();
+      engine.syncCommit(message, options);
+    } catch (error) {
+      console.error(chalk.red('提交失败:'), error.message);
+    }
+  });
+
+// 推送命令
 program
   .command('push')
   .description('推送到所有配置的远程仓库')
@@ -69,7 +79,7 @@ program
     }
   });
 
-// 从所有仓库拉取
+// 拉取命令
 program
   .command('pull')
   .description('从所有配置的远程仓库拉取')
@@ -83,7 +93,7 @@ program
     }
   });
 
-// 从所有仓库获取
+// 获取命令
 program
   .command('fetch')
   .description('从所有配置的远程仓库获取更新')
@@ -96,22 +106,22 @@ program
     }
   });
 
-// 状态检查
+// 状态命令
 program
   .command('status')
-  .description('检查同步状态')
+  .description('查看同步状态')
   .action(() => {
     try {
       const engine = new SyncEngine();
-      engine.showConfig();
-      
-      // 显示Git状态
-      console.log(chalk.blue('\n📊 Git状态:'));
-      const git = new (require('../lib/git-operator'))();
-      git.exec('status', [], { silent: false });
+      engine.showStatus();
     } catch (error) {
       console.error(chalk.red('状态检查失败:'), error.message);
     }
   });
+
+// 如果没有子命令，显示帮助
+if (process.argv.length <= 2) {
+  program.help();
+}
 
 program.parse(process.argv);

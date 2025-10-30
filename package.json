@@ -1,6 +1,6 @@
 {
   "name": "git-multi-sync-tool",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "基于文本配置的Git多仓库同步工具，支持一键推送到多个远程仓库",
   "main": "lib/sync-engine.js",
   "bin": {
@@ -8,19 +8,14 @@
     "gits": "./bin/git-sync.js"
   },
   "scripts": {
-    "test:integration": "node test/integration-test.js",
-    "local:install": "npm pack && npm install -g git-multi-sync-tool-1.0.0.tgz",
-    "local:test": "npm run local:install && echo '开始本地测试...'",
     "test": "node test/simple-test.js",
-    "test:full": "node test/integration-test.js",
-    "test:local": "node scripts/test-local.js",
-    "prepack": "npm test",
-    "prepublishOnly": "npm run test:full",
-    "dry-run": "npm pack && tar -tzf git-multi-sync-tool-*.tgz",
+    "test:full": "node scripts/test-publish.js",
+    "prepublishOnly": "npm test",
+    "dry-run": "npm pack --dry-run",
     "version:patch": "npm version patch",
     "version:minor": "npm version minor",
     "version:major": "npm version major",
-    "release": "npm run test:full && npm run dry-run && npm publish"
+    "release": "npm test && npm publish"
   },
   "keywords": [
     "git",
@@ -32,7 +27,7 @@
     "push",
     "pull"
   ],
-  "author": "Your Name <your.email@example.com>",
+  "author": "samuelyang",
   "license": "MIT",
   "repository": {
     "type": "git",

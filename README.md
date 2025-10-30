@@ -4,7 +4,7 @@ Git operation for submitting a set of code to multiple different remote reposito
 ## 使用方法
 ```
 1、全局安装​​：
-npm install -g git-sync-tool
+npm install -g git-multi-sync-tool
 
 2、在项目中使用​​：
 # 进入项目目录
@@ -44,6 +44,22 @@ https://gitee.com/yourname/project.git
 company http://git.company.com/team/project.git
 
 
+## 命令参考
+
+| 命令 | 说明 | 示例 |
+|------|------|------|
+| `init` | 创建配置文件 | `git-sync init` |
+| `config` | 显示配置 | `git-sync config` |
+| `setup` | 设置远程仓库 | `git-sync setup` |
+| `commit` | 提交代码 | `git-sync commit "消息"` |
+| `push` | 推送到所有仓库 | `git-sync push` |
+| `pull` | 从所有仓库拉取 | `git-sync pull` |
+| `fetch` | 获取更新 | `git-sync fetch` |
+| `status` | 查看状态 | `git-sync status` |
+
+## 许可证
+
+MIT
 ```
 ## 特点
 

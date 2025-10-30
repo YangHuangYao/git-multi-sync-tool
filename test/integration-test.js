@@ -9,6 +9,7 @@ console.log(chalk.blue('🔧 开始集成测试...'));
 class IntegrationTest {
   constructor() {
     this.testDir = path.join(__dirname, 'integration-test-temp');
+    this.projectRoot = path.join(__dirname, '..'); // 项目根目录
     this.setupTestEnvironment();
   }
   
@@ -22,13 +23,20 @@ class IntegrationTest {
     console.log(chalk.green('✅ 测试环境设置完成'));
   }
   
+  // 获取正确的命令路径
+  getCommandPath() {
+    return path.join(this.projectRoot, 'bin', 'git-sync.js');
+  }
+  
   // 测试配置文件创建
   testConfigCreation() {
     console.log(chalk.cyan('\n📝 测试配置文件创建...'));
     
     try {
+      const commandPath = this.getCommandPath();
+      
       // 在测试目录中执行 git-sync init
-      execSync('node ../bin/git-sync.js init', { 
+      execSync(`node "${commandPath}" init`, { 
         cwd: this.testDir,
         stdio: 'pipe'
       });
@@ -61,7 +69,7 @@ https://gitee.com/testuser/test-repo.git
       
       fs.writeFileSync(path.join(this.testDir, '.git-remotes.txt'), configContent);
       
-      // 测试配置加载
+      // 测试配置加载 - 使用正确的相对路径
       const configLoader = require('../lib/config-loader');
       const config = configLoader.loadConfig(this.testDir);
       
@@ -82,7 +90,8 @@ https://gitee.com/testuser/test-repo.git
     console.log(chalk.cyan('\n❓ 测试命令帮助...'));
     
     try {
-      const output = execSync('node ../bin/git-sync.js --help', { 
+      const commandPath = this.getCommandPath();
+      const output = execSync(`node "${commandPath}" --help`, { 
         encoding: 'utf-8' 
       });
       

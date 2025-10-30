@@ -1,4 +1,3 @@
-// test/simple-test.js
 const fs = require('fs-extra');
 const path = require('path');
 const chalk = require('chalk');
