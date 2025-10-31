@@ -1,4 +1,4 @@
-# git-sync-tool
+# git-multi-sync-tool
 
 一个强大的 Git 多仓库同步工具 - 基于文本配置文件，支持一键推送到多个远程仓库
 
