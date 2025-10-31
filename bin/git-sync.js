@@ -58,6 +58,12 @@ program
   .option('-f, --force', '推送时强制覆盖')
   .option('-u, --set-upstream', '推送时设置上游分支')
   .option('--force-with-lease', '推送时使用更安全的force-with-lease')
+  .option('--pull-before-push', '推送前先从各地址获取并快进合并(FETCH_HEAD)')
+  .option(
+    '--on-non-ff <strategy>',
+    '非快进时的处理: skip|rebase|force-with-lease|force',
+    'skip',
+  )
   .action((message, options) => {
     try {
       const engine = new SyncEngine();
@@ -74,6 +80,12 @@ program
   .option('-f, --force', '强制推送')
   .option('-u, --set-upstream', '设置上游分支')
   .option('--force-with-lease', '使用更安全的force-with-lease')
+  .option('--pull-before-push', '推送前先从各地址获取并快进合并(FETCH_HEAD)')
+  .option(
+    '--on-non-ff <strategy>',
+    '非快进时的处理: skip|rebase|force-with-lease|force',
+    'skip',
+  )
   .action((options) => {
     try {
       const engine = new SyncEngine();
@@ -121,6 +133,22 @@ program
       engine.showStatus();
     } catch (error) {
       console.error(chalk.red('状态检查失败:'), error.message);
+    }
+  });
+
+// 同步所有分支和tag命令
+program
+  .command('sync-all <target-url>')
+  .description('将当前远程仓库的所有分支及tag同步到指定的远程仓库')
+  .option('-s, --source <remote>', '源远程仓库名称（默认: origin）', 'origin')
+  .option('-f, --force', '强制推送')
+  .option('--force-with-lease', '使用更安全的force-with-lease')
+  .action((targetUrl, options) => {
+    try {
+      const engine = new SyncEngine();
+      engine.syncAllToRemote(targetUrl, options.source, options);
+    } catch (error) {
+      console.error(chalk.red('同步失败:'), error.message);
     }
   });
 

@@ -1,6 +1,6 @@
 {
   "name": "git-multi-sync-tool",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "基于文本配置的Git多仓库同步工具，支持一键推送到多个远程仓库",
   "main": "lib/sync-engine.js",
   "bin": {
