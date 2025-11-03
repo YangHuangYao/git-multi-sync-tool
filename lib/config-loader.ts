@@ -47,8 +47,106 @@ class ConfigLoader {
     return null;
   }
 
+  // 从环境变量读取配置
+  loadConfigFromEnv(): RemoteConfig[] {
+    const remotes: RemoteConfig[] = [];
+
+    // 支持多种环境变量格式
+    // GIT_SYNC_REMOTES: "url1,url2,url3"
+    // GIT_SYNC_REMOTE_0, GIT_SYNC_REMOTE_1, ...
+    // GIT_SYNC_REMOTE_URL_0, GIT_SYNC_REMOTE_NAME_0, ...
+
+    // 方式1: GIT_SYNC_REMOTES (逗号分隔)
+    if (process.env.GIT_SYNC_REMOTES) {
+      const urls = process.env.GIT_SYNC_REMOTES.split(',').map((u) => u.trim());
+      urls.forEach((url, index) => {
+        if (url) {
+          const validation = this.validateGitUrl(url);
+          if (validation.valid) {
+            remotes.push({
+              name: this.generateRemoteName(
+                url,
+                index,
+                remotes.map((r) => r.name),
+              ),
+              url: url,
+              enabled: true,
+              lineNumber: index + 1,
+            });
+          }
+        }
+      });
+    }
+
+    // 方式2: GIT_SYNC_REMOTE_0, GIT_SYNC_REMOTE_1, ...
+    let index = 0;
+    while (process.env[`GIT_SYNC_REMOTE_${index}`]) {
+      const url = process.env[`GIT_SYNC_REMOTE_${index}`]?.trim();
+      if (url) {
+        const validation = this.validateGitUrl(url);
+        if (validation.valid) {
+          remotes.push({
+            name: this.generateRemoteName(
+              url,
+              index,
+              remotes.map((r) => r.name),
+            ),
+            url: url,
+            enabled: true,
+            lineNumber: index + 1,
+          });
+        }
+      }
+      index++;
+    }
+
+    // 方式3: GIT_SYNC_REMOTE_URL_0 + GIT_SYNC_REMOTE_NAME_0 (配对格式)
+    index = 0;
+    while (process.env[`GIT_SYNC_REMOTE_URL_${index}`]) {
+      const url = process.env[`GIT_SYNC_REMOTE_URL_${index}`]?.trim();
+
+      if (!url) {
+        index++;
+        continue;
+      }
+
+      const name =
+        process.env[`GIT_SYNC_REMOTE_NAME_${index}`]?.trim() ||
+        this.generateRemoteName(
+          url,
+          index,
+          remotes.map((r) => r.name),
+        );
+
+      const validation = this.validateGitUrl(url);
+      if (validation.valid) {
+        remotes.push({
+          name: name,
+          url: url,
+          enabled: true,
+          lineNumber: index + 1,
+        });
+      }
+      index++;
+    }
+
+    return remotes;
+  }
+
   // 读取并解析配置文件
   loadConfig(projectPath: string = process.cwd()): ConfigResult {
+    // 优先级1: 环境变量配置
+    const envRemotes = this.loadConfigFromEnv();
+    if (envRemotes.length > 0) {
+      return {
+        exists: true,
+        remotes: envRemotes,
+        configPath: 'environment',
+        configFile: 'environment variables',
+      };
+    }
+
+    // 优先级2: 配置文件
     const configPath = this.findConfigFile(projectPath);
 
     if (!configPath) {

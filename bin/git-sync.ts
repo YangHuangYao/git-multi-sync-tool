@@ -30,10 +30,61 @@ function findPackageJson(): any {
 
 const packageJson = findPackageJson();
 
+// 全局选项
 program
   .name('git-sync')
   .description('Git多仓库同步工具 - 基于文本配置文件')
-  .version(packageJson.version);
+  .version(packageJson.version)
+  .option('-q, --quiet', '静默模式，减少输出')
+  .option('--json', 'JSON 输出模式，便于脚本处理')
+  .option('--verbose', '详细输出模式，即使在 CI 环境中也输出详细信息');
+
+// CI 专用命令
+program
+  .command('ci:push')
+  .description('CI/CD 专用：推送到所有配置的远程仓库（静默模式）')
+  .option('-f, --force', '强制推送')
+  .option('-u, --set-upstream', '设置上游分支')
+  .option('--force-with-lease', '使用更安全的force-with-lease')
+  .option('--pull-before-push', '推送前先从各地址获取并快进合并(FETCH_HEAD)')
+  .option(
+    '--on-non-ff <strategy>',
+    '非快进时的处理: skip|rebase|force-with-lease|force',
+    'skip',
+  )
+  .action((options: any) => {
+    try {
+      const globalOptions = program.opts();
+      const engine = new SyncEngine(process.cwd(), {
+        quiet: globalOptions.quiet ?? true,
+        json: globalOptions.json ?? false,
+      });
+      engine.pushAll(options);
+    } catch (error) {
+      console.error(chalk.red('推送失败:'), (error as Error).message);
+      process.exit(1);
+    }
+  });
+
+program
+  .command('ci:sync')
+  .description('CI/CD 专用：设置远程仓库并推送（一键操作）')
+  .option('-f, --force', '强制推送')
+  .option('--force-with-lease', '使用更安全的force-with-lease')
+  .action((options: any) => {
+    try {
+      const globalOptions = program.opts();
+      const engine = new SyncEngine(process.cwd(), {
+        quiet: globalOptions.quiet ?? true,
+        json: globalOptions.json ?? false,
+      });
+      engine.setupRemotes();
+      engine.pushAll(options);
+    } catch (error) {
+      console.error(chalk.red('同步失败:'), (error as Error).message);
+      process.exit(1);
+    }
+  });
 
 // 初始化命令
 program
@@ -55,10 +106,15 @@ program
   .description('显示当前配置')
   .action(() => {
     try {
-      const engine = new SyncEngine();
+      const globalOptions = program.opts();
+      const engine = new SyncEngine(process.cwd(), {
+        quiet: globalOptions.quiet ?? false,
+        json: globalOptions.json ?? false,
+      });
       engine.showConfig();
     } catch (error) {
       console.error(chalk.red('显示配置失败:'), (error as Error).message);
+      process.exit(1);
     }
   });
 
@@ -68,10 +124,15 @@ program
   .description('根据配置文件设置远程仓库')
   .action(() => {
     try {
-      const engine = new SyncEngine();
+      const globalOptions = program.opts();
+      const engine = new SyncEngine(process.cwd(), {
+        quiet: globalOptions.quiet ?? false,
+        json: globalOptions.json ?? false,
+      });
       engine.setupRemotes();
     } catch (error) {
       console.error(chalk.red('设置远程仓库失败:'), (error as Error).message);
+      process.exit(1);
     }
   });
 
@@ -92,10 +153,15 @@ program
   )
   .action((message: string, options: any) => {
     try {
-      const engine = new SyncEngine();
+      const globalOptions = program.opts();
+      const engine = new SyncEngine(process.cwd(), {
+        quiet: globalOptions.quiet ?? false,
+        json: globalOptions.json ?? false,
+      });
       engine.syncCommit(message, options);
     } catch (error) {
       console.error(chalk.red('提交失败:'), (error as Error).message);
+      process.exit(1);
     }
   });
 
@@ -114,10 +180,15 @@ program
   )
   .action((options: any) => {
     try {
-      const engine = new SyncEngine();
+      const globalOptions = program.opts();
+      const engine = new SyncEngine(process.cwd(), {
+        quiet: globalOptions.quiet ?? false,
+        json: globalOptions.json ?? false,
+      });
       engine.pushAll(options);
     } catch (error) {
       console.error(chalk.red('推送失败:'), (error as Error).message);
+      process.exit(1);
     }
   });
 
@@ -129,10 +200,15 @@ program
   .option('--merge-mirrors', '对镜像远程执行合并（默认仅fetch）')
   .action((options: any) => {
     try {
-      const engine = new SyncEngine();
+      const globalOptions = program.opts();
+      const engine = new SyncEngine(process.cwd(), {
+        quiet: globalOptions.quiet ?? false,
+        json: globalOptions.json ?? false,
+      });
       engine.pullAll(options);
     } catch (error) {
       console.error(chalk.red('拉取失败:'), (error as Error).message);
+      process.exit(1);
     }
   });
 
@@ -142,10 +218,15 @@ program
   .description('从所有配置的远程仓库获取更新')
   .action(() => {
     try {
-      const engine = new SyncEngine();
+      const globalOptions = program.opts();
+      const engine = new SyncEngine(process.cwd(), {
+        quiet: globalOptions.quiet ?? false,
+        json: globalOptions.json ?? false,
+      });
       engine.fetchAll();
     } catch (error) {
       console.error(chalk.red('获取失败:'), (error as Error).message);
+      process.exit(1);
     }
   });
 
@@ -155,10 +236,15 @@ program
   .description('查看同步状态')
   .action(() => {
     try {
-      const engine = new SyncEngine();
+      const globalOptions = program.opts();
+      const engine = new SyncEngine(process.cwd(), {
+        quiet: globalOptions.quiet ?? false,
+        json: globalOptions.json ?? false,
+      });
       engine.showStatus();
     } catch (error) {
       console.error(chalk.red('状态检查失败:'), (error as Error).message);
+      process.exit(1);
     }
   });
 
@@ -171,10 +257,15 @@ program
   .option('--force-with-lease', '使用更安全的force-with-lease')
   .action((targetUrl: string, options: any) => {
     try {
-      const engine = new SyncEngine();
+      const globalOptions = program.opts();
+      const engine = new SyncEngine(process.cwd(), {
+        quiet: globalOptions.quiet ?? false,
+        json: globalOptions.json ?? false,
+      });
       engine.syncAllToRemote(targetUrl, options.source, options);
     } catch (error) {
       console.error(chalk.red('同步失败:'), (error as Error).message);
+      process.exit(1);
     }
   });
 

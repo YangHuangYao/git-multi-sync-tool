@@ -247,8 +247,8 @@ origin-3 https://gitlab.com/user/repo.git
 - **名称**: git-multi-sync-tool
 - **版本**: 1.0.5
 - **技术栈**: TypeScript + Node.js
-- **仓库**: https://github.com/YangHuangYao/git-sync-tool
-- **问题反馈**: https://github.com/YangHuangYao/git-sync-tool/issues
+- **仓库**: https://github.com/samuelyhy/git-multi-sync-tool
+- **问题反馈**: https://github.com/samuelyhy/git-multi-sync-tool/issues
 - **许可证**: MIT
 
 ## 🤝 贡献
@@ -256,6 +256,19 @@ origin-3 https://gitlab.com/user/repo.git
 欢迎提交问题和 Pull Request！
 
 ## 📝 更新日志
+
+### v1.0.6
+
+- ✨ 项目初始化
+- 🔧 测试修复 bug
+- 📝 upd: 更新 typescript 版本
+- 📝 upd: 更新文档
+- 📝 upd: 增加一个全量仓库同步到指定远程仓库的功能
+- 📝 upd: 更新调试提交有冲突的提交导致不能正常提交的 bug
+- 📝 upd: 版本更新
+- 📝 upd: 更新 bug 调试
+- 📝 upd: 调试
+- 📝 Initial commit
 
 ### v1.1.0
 

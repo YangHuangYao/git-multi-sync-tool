@@ -2,6 +2,11 @@ import { spawnSync, SpawnSyncReturns } from 'child_process';
 import * as path from 'path';
 import chalk from 'chalk';
 
+export interface OutputOptions {
+  quiet?: boolean;
+  json?: boolean;
+}
+
 export interface GitExecOptions {
   silent?: boolean;
 }
@@ -52,9 +57,28 @@ export interface PushAllBranchesOptions {
 
 class GitOperator {
   private projectPath: string;
+  private outputOptions: OutputOptions = {};
 
   constructor(projectPath: string = process.cwd()) {
     this.projectPath = projectPath;
+  }
+
+  setOutputOptions(options: OutputOptions): void {
+    this.outputOptions = { ...this.outputOptions, ...options };
+  }
+
+  private shouldOutput(): boolean {
+    return !this.outputOptions.quiet;
+  }
+
+  private logMessage(message: string, color?: typeof chalk): void {
+    if (this.shouldOutput() && !this.outputOptions.json) {
+      if (color) {
+        console.log(color(message));
+      } else {
+        console.log(message);
+      }
+    }
   }
 
   // 执行Git命令 - 使用 spawnSync 避免注入问题
@@ -71,7 +95,7 @@ class GitOperator {
       encoding: 'utf-8' as const,
     };
 
-    if (!options.silent) {
+    if (!options.silent && this.shouldOutput() && !this.outputOptions.json) {
       console.log(chalk.blue(`$ git ${argv.join(' ')}`));
     }
 

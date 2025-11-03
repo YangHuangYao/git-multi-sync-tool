@@ -1,6 +1,6 @@
 {
   "name": "git-multi-sync-tool",
-  "version": "1.0.5",
+  "version": "1.0.6",
   "description": "基于文本配置的Git多仓库同步工具，支持一键推送到多个远程仓库",
   "main": "dist/lib/sync-engine.js",
   "bin": {
@@ -11,15 +11,18 @@
     "build": "tsc",
     "clean": "node -e \"require('fs').rmSync('dist', {recursive: true, force: true})\"",
     "check-version": "node scripts/check-npm-version.js",
+    "auto-bump-version": "node scripts/auto-bump-version.js",
     "check-auth": "node scripts/check-npm-auth.js",
-    "prepublishOnly": "npm run check-auth && npm run check-version && npm run clean && npm run build && npm test",
+    "prepublishOnly": "npm run check-auth && npm run auto-bump-version && npm run clean && npm run build && npm test",
     "test": "node test/simple-test.js",
     "test:full": "node scripts/test-publish.js",
     "test:debug": "node scripts/debug-commit.js",
     "dry-run": "npm pack --dry-run",
+    "changelog": "node scripts/generate-changelog.js",
     "version:patch": "npm version patch",
     "version:minor": "npm version minor",
     "version:major": "npm version major",
+    "postversion": "npm run changelog && git add README.md",
     "release": "npm run build && npm test && npm publish"
   },
   "keywords": [
@@ -36,12 +39,12 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/YangHuangYao/git-sync-tool.git"
+    "url": "git+https://github.com/samuelyhy/git-multi-sync-tool.git"
   },
   "bugs": {
-    "url": "https://github.com/YangHuangYao/git-sync-tool/issues"
+    "url": "https://github.com/samuelyhy/git-multi-sync-tool/issues"
   },
-  "homepage": "https://github.com/YangHuangYao/git-sync-tool#readme",
+  "homepage": "https://github.com/samuelyhy/git-multi-sync-tool#readme",
   "engines": {
     "node": ">=14.14.0"
   },
@@ -58,6 +61,7 @@
   "devDependencies": {
     "@types/fs-extra": "^11.0.4",
     "@types/node": "^20.10.0",
+    "conventional-changelog-cli": "^5.0.0",
     "mock-fs": "^5.1.4",
     "typescript": "^5.3.3"
   }

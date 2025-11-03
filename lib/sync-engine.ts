@@ -1,6 +1,7 @@
 import chalk from 'chalk';
 import GitOperator from './git-operator';
 import configLoader, { ConfigResult, RemoteConfig } from './config-loader';
+import ciDetector from './ci-detector';
 
 export interface CommitOptions {
   push?: boolean;
@@ -36,14 +37,62 @@ export interface SyncAllResult {
   tags: number;
 }
 
+export interface OutputOptions {
+  quiet?: boolean;
+  json?: boolean;
+}
+
 class SyncEngine {
   private projectPath: string;
   private git: GitOperator;
   private config: ConfigResult | null = null;
+  private outputOptions: OutputOptions = {};
 
-  constructor(projectPath: string = process.cwd()) {
+  constructor(
+    projectPath: string = process.cwd(),
+    outputOptions: OutputOptions = {},
+  ) {
     this.projectPath = projectPath;
     this.git = new GitOperator(projectPath);
+
+    // 自动检测 CI 环境并设置默认输出选项
+    const isCI = ciDetector.isCI();
+    const verbose =
+      process.env.GIT_SYNC_VERBOSE === 'true' || outputOptions.quiet === false;
+    this.outputOptions = {
+      quiet: outputOptions.quiet ?? (isCI && !verbose),
+      json: outputOptions.json ?? false,
+    };
+
+    // 传递给 GitOperator
+    this.git.setOutputOptions(this.outputOptions);
+  }
+
+  setOutputOptions(options: OutputOptions): void {
+    this.outputOptions = { ...this.outputOptions, ...options };
+    this.git.setOutputOptions(this.outputOptions);
+  }
+
+  private shouldOutput(): boolean {
+    return !this.outputOptions.quiet;
+  }
+
+  private output(message: string, color?: typeof chalk, data?: any): void {
+    if (this.outputOptions.json && data) {
+      console.log(JSON.stringify(data));
+    } else if (this.shouldOutput()) {
+      if (color) {
+        console.log(color(message));
+      } else {
+        console.log(message);
+      }
+    }
+  }
+
+  private outputJSON(data: any): void {
+    if (this.outputOptions.json) {
+      console.log(JSON.stringify(data));
+    }
   }
 
   // 加载配置并验证
