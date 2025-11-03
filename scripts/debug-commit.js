@@ -33,7 +33,7 @@ class CommitDebugger {
     console.log(chalk.cyan('\n2. 测试GitOperator...'));
     
     try {
-      const GitOperator = require('../lib/git-operator');
+      const GitOperator = require('../dist/lib/git-operator').default;
       const git = new GitOperator();
       
       console.log(chalk.gray('测试: git.add()'));
@@ -62,7 +62,7 @@ class CommitDebugger {
     console.log(chalk.cyan('\n3. 测试完整提交流程...'));
     
     try {
-      const SyncEngine = require('../lib/sync-engine');
+      const SyncEngine = require('../dist/lib/sync-engine').default;
       const engine = new SyncEngine();
       
       // 创建测试文件

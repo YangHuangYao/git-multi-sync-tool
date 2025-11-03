@@ -18,10 +18,10 @@ class PublishTester {
       'package.json',
       'README.md',
       'LICENSE',
-      'bin/git-sync.js',
-      'lib/config-loader.js',
-      'lib/git-operator.js',
-      'lib/sync-engine.js',
+      'dist/bin/git-sync.js',
+      'dist/lib/config-loader.js',
+      'dist/lib/git-operator.js',
+      'dist/lib/sync-engine.js',
     ];
 
     let allExists = true;
@@ -82,7 +82,7 @@ class PublishTester {
     console.log(chalk.cyan('\n❓ 测试命令行帮助...'));
 
     try {
-      const output = execSync('node bin/git-sync.js --help', {
+      const output = execSync('node dist/bin/git-sync.js --help', {
         encoding: 'utf-8',
         cwd: this.projectRoot,
       });

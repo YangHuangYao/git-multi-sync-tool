@@ -1,20 +1,61 @@
-const chalk = require('chalk');
-const GitOperator = require('./git-operator');
-const configLoader = require('./config-loader');
+import chalk from 'chalk';
+import GitOperator from './git-operator';
+import configLoader, { ConfigResult, RemoteConfig } from './config-loader';
+
+export interface CommitOptions {
+  push?: boolean;
+  all?: boolean;
+  force?: boolean;
+  setUpstream?: boolean;
+  forceWithLease?: boolean;
+  pullBeforePush?: boolean;
+  onNonFf?: string;
+}
+
+export interface PushOptions {
+  force?: boolean;
+  setUpstream?: boolean;
+  forceWithLease?: boolean;
+  pullBeforePush?: boolean;
+  onNonFf?: string;
+}
+
+export interface PullOptions {
+  rebase?: boolean;
+  mergeMirrors?: boolean;
+}
+
+export interface SyncAllOptions {
+  force?: boolean;
+  forceWithLease?: boolean;
+}
+
+export interface SyncAllResult {
+  success: boolean;
+  branches: number;
+  tags: number;
+}
 
 class SyncEngine {
-  constructor(projectPath = process.cwd()) {
+  private projectPath: string;
+  private git: GitOperator;
+  private config: ConfigResult | null = null;
+
+  constructor(projectPath: string = process.cwd()) {
     this.projectPath = projectPath;
     this.git = new GitOperator(projectPath);
-    this.config = null;
   }
 
   // 加载配置并验证
-  loadAndValidate() {
+  loadAndValidate(): ConfigResult {
     const validation = configLoader.validateConfig(this.projectPath);
 
     if (!validation.valid) {
-      throw new Error(validation.error);
+      throw new Error(validation.error || '配置验证失败');
+    }
+
+    if (!validation.config) {
+      throw new Error('配置加载失败');
     }
 
     this.config = validation.config;
@@ -22,9 +63,13 @@ class SyncEngine {
   }
 
   // 显示配置信息
-  showConfig() {
+  showConfig(): void {
     if (!this.config) {
       this.loadAndValidate();
+    }
+
+    if (!this.config) {
+      return;
     }
 
     console.log(chalk.blue('\n📊 Git多仓库同步配置'));
@@ -43,7 +88,7 @@ class SyncEngine {
   }
 
   // 显示状态
-  showStatus() {
+  showStatus(): void {
     this.showConfig();
 
     // 显示Git状态
@@ -52,9 +97,13 @@ class SyncEngine {
   }
 
   // 设置远程仓库
-  setupRemotes() {
+  setupRemotes(): void {
     if (!this.config) {
       this.loadAndValidate();
+    }
+
+    if (!this.config) {
+      return;
     }
 
     console.log(chalk.blue('\n🔧 设置远程仓库...'));
@@ -66,14 +115,14 @@ class SyncEngine {
     const totalEnabled = this.config.remotes.filter((r) => r.enabled).length;
 
     // 将名字结尾的 -数字 视为同一组（同一仓库不同地址），把后续地址作为 push-only URL
-    const groups = new Map();
-    const getBaseName = (name) => name.replace(/-\d+$/, '');
+    const groups = new Map<string, RemoteConfig[]>();
+    const getBaseName = (name: string) => name.replace(/-\d+$/, '');
 
     for (const remote of this.config.remotes) {
       if (!remote.enabled) continue;
       const base = getBaseName(remote.name);
       if (!groups.has(base)) groups.set(base, []);
-      groups.get(base).push(remote);
+      groups.get(base)!.push(remote);
     }
 
     for (const [base, remotes] of groups.entries()) {
@@ -111,14 +160,14 @@ class SyncEngine {
   }
 
   // 同步提交 - 修复版本
-  syncCommit(message, options = {}) {
+  syncCommit(message: string, options: CommitOptions = {}): void {
     console.log(chalk.blue('🔄 同步提交代码...'));
 
     try {
       // 修复：使用正确的add方法调用
       console.log(chalk.cyan('📁 添加文件到暂存区...'));
 
-      const addOptions = {};
+      const addOptions: { all?: boolean } = {};
       if (options.all) {
         addOptions.all = true;
       }
@@ -146,14 +195,18 @@ class SyncEngine {
         this.pushAll(options);
       }
     } catch (error) {
-      console.error(chalk.red('提交失败:'), error.message);
+      console.error(chalk.red('提交失败:'), (error as Error).message);
     }
   }
 
   // 批量推送
-  async pushAll(options = {}) {
+  async pushAll(options: PushOptions = {}): Promise<number> {
     if (!this.config) {
       this.loadAndValidate();
+    }
+
+    if (!this.config) {
+      throw new Error('配置加载失败');
     }
 
     const branch = this.git.getCurrentBranch();
@@ -269,9 +322,13 @@ class SyncEngine {
   }
 
   // 批量拉取
-  async pullAll(options = {}) {
+  async pullAll(options: PullOptions = {}): Promise<number> {
     if (!this.config) {
       this.loadAndValidate();
+    }
+
+    if (!this.config) {
+      throw new Error('配置加载失败');
     }
 
     const branch = this.git.getCurrentBranch();
@@ -281,13 +338,13 @@ class SyncEngine {
       );
     }
     // 分组：第一组作为主仓库，其余组仅 fetch（除非开启 mergeMirrors）
-    const groups = new Map();
-    const getBaseName = (name) => name.replace(/-\d+$/, '');
+    const groups = new Map<string, typeof this.config.remotes>();
+    const getBaseName = (name: string) => name.replace(/-\d+$/, '');
     for (const remote of this.config.remotes) {
       if (!remote.enabled) continue;
       const base = getBaseName(remote.name);
       if (!groups.has(base)) groups.set(base, []);
-      groups.get(base).push(remote);
+      groups.get(base)!.push(remote);
     }
 
     const groupEntries = Array.from(groups.entries());
@@ -331,7 +388,7 @@ class SyncEngine {
       } catch (error) {
         console.log(
           chalk.yellow(`⚠️  从 ${remote.name} 处理失败:`),
-          error.message,
+          (error as Error).message,
         );
       }
     }
@@ -343,19 +400,23 @@ class SyncEngine {
   }
 
   // 批量获取
-  async fetchAll() {
+  async fetchAll(): Promise<number> {
     if (!this.config) {
       this.loadAndValidate();
     }
 
+    if (!this.config) {
+      throw new Error('配置加载失败');
+    }
+
     // 按组只对主远程 fetch
-    const groups = new Map();
-    const getBaseName = (name) => name.replace(/-\d+$/, '');
+    const groups = new Map<string, typeof this.config.remotes>();
+    const getBaseName = (name: string) => name.replace(/-\d+$/, '');
     for (const remote of this.config.remotes) {
       if (!remote.enabled) continue;
       const base = getBaseName(remote.name);
       if (!groups.has(base)) groups.set(base, []);
-      groups.get(base).push(remote);
+      groups.get(base)!.push(remote);
     }
 
     console.log(chalk.blue(`\n📥 从 ${groups.size} 组远程仓库获取更新`));
@@ -379,9 +440,17 @@ class SyncEngine {
   }
 
   // 同步所有分支和tag到指定远程仓库
-  async syncAllToRemote(targetUrl, sourceRemote = 'origin', options = {}) {
+  async syncAllToRemote(
+    targetUrl: string,
+    sourceRemote: string = 'origin',
+    options: SyncAllOptions = {},
+  ): Promise<SyncAllResult> {
     if (!this.config) {
       this.loadAndValidate();
+    }
+
+    if (!this.config) {
+      throw new Error('配置加载失败');
     }
 
     // 验证参数
@@ -500,4 +569,4 @@ class SyncEngine {
   }
 }
 
-module.exports = SyncEngine;
+export default SyncEngine;

@@ -8,7 +8,7 @@ console.log(chalk.blue('🧪 简单功能测试'));
 function testConfigLoader() {
   console.log(chalk.cyan('\n1. 测试配置加载器...'));
 
-  const configLoader = require('../lib/config-loader');
+  const configLoader = require('../dist/lib/config-loader').default;
 
   // 创建临时测试文件
   const testContent = `
@@ -49,7 +49,7 @@ https://gitee.com/test/repo1.git
 function testSyncEngine() {
   console.log(chalk.cyan('\n2. 测试同步引擎...'));
 
-  const SyncEngine = require('../lib/sync-engine');
+  const SyncEngine = require('../dist/lib/sync-engine').default;
 
   try {
     const engine = new SyncEngine();
@@ -66,7 +66,7 @@ function testCommandHelp() {
 
   try {
     const { execSync } = require('child_process');
-    const output = execSync('node bin/git-sync.js --help', {
+    const output = execSync('node dist/bin/git-sync.js --help', {
       encoding: 'utf-8',
     });
 

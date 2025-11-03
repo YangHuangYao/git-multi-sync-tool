@@ -1,27 +1,85 @@
-const { spawnSync } = require('child_process');
-const path = require('path');
-const chalk = require('chalk');
+import { spawnSync, SpawnSyncReturns } from 'child_process';
+import * as path from 'path';
+import chalk from 'chalk';
+
+export interface GitExecOptions {
+  silent?: boolean;
+}
+
+export interface GitExecResult {
+  success: boolean;
+  output?: string;
+  error?: string;
+  command: string;
+}
+
+export interface PushOptions {
+  force?: boolean;
+  forceWithLease?: boolean;
+  setUpstream?: boolean;
+}
+
+export interface PullOptions {
+  rebase?: boolean;
+}
+
+export interface MergeOptions {
+  ffOnly?: boolean;
+}
+
+export interface AddOptions {
+  all?: boolean;
+}
+
+export interface CommitOptions {
+  amend?: boolean;
+  all?: boolean;
+}
+
+export interface CheckoutOptions {
+  newBranch?: boolean;
+}
+
+export interface LogOptions {
+  number?: number;
+}
+
+export interface PushAllBranchesOptions {
+  force?: boolean;
+  forceWithLease?: boolean;
+  mirror?: boolean;
+}
 
 class GitOperator {
-  constructor(projectPath = process.cwd()) {
+  private projectPath: string;
+
+  constructor(projectPath: string = process.cwd()) {
     this.projectPath = projectPath;
   }
 
   // 执行Git命令 - 使用 spawnSync 避免注入问题
-  exec(command, args = [], options = {}) {
+  exec(
+    command: string,
+    args: string[] = [],
+    options: GitExecOptions = {},
+  ): GitExecResult {
     const argv = [command, ...args];
 
     const spawnOptions = {
       cwd: this.projectPath,
-      stdio: options.silent ? 'pipe' : 'inherit',
-      encoding: 'utf-8',
+      stdio: options.silent ? ('pipe' as const) : ('inherit' as const),
+      encoding: 'utf-8' as const,
     };
 
     if (!options.silent) {
       console.log(chalk.blue(`$ git ${argv.join(' ')}`));
     }
 
-    const child = spawnSync('git', argv, spawnOptions);
+    const child: SpawnSyncReturns<string> = spawnSync(
+      'git',
+      argv,
+      spawnOptions,
+    );
 
     const success = child.status === 0;
     const output = (child.stdout || '').toString().trim();
@@ -37,7 +95,7 @@ class GitOperator {
   }
 
   // 检查是否是Git仓库
-  isGitRepo() {
+  isGitRepo(): boolean {
     const result = this.exec('rev-parse', ['--is-inside-work-tree'], {
       silent: true,
     });
@@ -47,22 +105,22 @@ class GitOperator {
   }
 
   // 初始化Git仓库
-  init() {
+  init(): GitExecResult {
     if (!this.isGitRepo()) {
       console.log(chalk.blue('初始化Git仓库...'));
       return this.exec('init');
     }
-    return { success: true };
+    return { success: true, command: 'git init' };
   }
 
   // 设置远程仓库
-  setupRemote(name, url) {
+  setupRemote(name: string, url: string): GitExecResult {
     const existing = this.getRemoteUrl(name);
 
     if (existing) {
       if (existing === url) {
         console.log(chalk.gray(`远程仓库 ${name} 已存在且配置正确`));
-        return { success: true };
+        return { success: true, command: `git remote set-url ${name} ${url}` };
       } else {
         console.log(chalk.blue(`更新远程仓库 ${name}: ${url}`));
         return this.exec('remote', ['set-url', name, url]);
@@ -74,27 +132,27 @@ class GitOperator {
   }
 
   // 设置远程的fetch URL（不影响push urls）
-  setFetchUrl(name, url) {
+  setFetchUrl(name: string, url: string): GitExecResult {
     return this.exec('remote', ['set-url', name, url]);
   }
 
   // 为远程追加一个push URL
-  addPushUrl(name, url) {
+  addPushUrl(name: string, url: string): GitExecResult {
     return this.exec('remote', ['set-url', '--add', '--push', name, url]);
   }
 
   // 获取远程仓库URL
-  getRemoteUrl(name) {
+  getRemoteUrl(name: string): string | null {
     try {
       const result = this.exec('remote', ['get-url', name], { silent: true });
-      return result.success ? result.output : null;
+      return result.success ? result.output || null : null;
     } catch {
       return null;
     }
   }
 
   // 获取当前分支
-  getCurrentBranch() {
+  getCurrentBranch(): string | null {
     const result = this.exec('branch', ['--show-current'], { silent: true });
     if (!result.success) return null;
     const branch = (result.output || '').trim();
@@ -102,12 +160,12 @@ class GitOperator {
   }
 
   // 获取所有远程仓库
-  getRemotes() {
+  getRemotes(): Record<string, string> {
     const result = this.exec('remote', ['-v'], { silent: true });
-    if (!result.success) return [];
+    if (!result.success) return {};
 
-    const remotes = {};
-    result.output.split('\n').forEach((line) => {
+    const remotes: Record<string, string> = {};
+    result.output?.split('\n').forEach((line) => {
       const [name, urlAndType] = line.split('\t');
       if (name && urlAndType) {
         const url = urlAndType.split(' ')[0];
@@ -121,8 +179,12 @@ class GitOperator {
   }
 
   // 推送代码
-  push(remote, branch, options = {}) {
-    const args = [];
+  push(
+    remote: string,
+    branch: string,
+    options: PushOptions = {},
+  ): GitExecResult {
+    const args: string[] = [];
     if (options.forceWithLease) args.push('--force-with-lease');
     else if (options.force) args.push('--force');
     if (options.setUpstream) args.push('--set-upstream');
@@ -134,8 +196,12 @@ class GitOperator {
   }
 
   // 直接推送到 URL（独立推送不依赖远程名）
-  pushToUrl(url, branch, options = {}) {
-    const args = [];
+  pushToUrl(
+    url: string,
+    branch: string,
+    options: PushOptions = {},
+  ): GitExecResult {
+    const args: string[] = [];
     if (options.forceWithLease) args.push('--force-with-lease');
     else if (options.force) args.push('--force');
     if (options.setUpstream) args.push('--set-upstream');
@@ -147,7 +213,11 @@ class GitOperator {
   }
 
   // 拉取代码
-  pull(remote, branch, options = {}) {
+  pull(
+    remote: string,
+    branch: string,
+    options: PullOptions = {},
+  ): GitExecResult {
     const args = [remote, branch];
     if (options.rebase) args.push('--rebase');
 
@@ -155,7 +225,7 @@ class GitOperator {
   }
 
   // 获取更新
-  fetch(remote, branch) {
+  fetch(remote: string, branch?: string): GitExecResult {
     const args = [remote];
     if (branch) args.push(branch);
 
@@ -163,15 +233,15 @@ class GitOperator {
   }
 
   // 直接从 URL 获取（FETCH_HEAD）
-  fetchFromUrl(url, branch) {
+  fetchFromUrl(url: string, branch?: string): GitExecResult {
     const args = [url];
     if (branch) args.push(branch);
     return this.exec('fetch', args);
   }
 
   // 添加文件 - 修复版本
-  add(options = {}) {
-    const args = [];
+  add(options: AddOptions = {}): GitExecResult {
+    const args: string[] = [];
 
     if (options.all) {
       args.push('--all');
@@ -184,7 +254,7 @@ class GitOperator {
   }
 
   // 提交代码 - 修复版本
-  commit(message, options = {}) {
+  commit(message: string, options: CommitOptions = {}): GitExecResult {
     const args = ['-m', message];
 
     if (options.amend) {
@@ -198,8 +268,8 @@ class GitOperator {
   }
 
   // 切换分支
-  checkout(branch, options = {}) {
-    const args = [];
+  checkout(branch: string, options: CheckoutOptions = {}): GitExecResult {
+    const args: string[] = [];
     if (options.newBranch) args.push('-b');
     args.push(branch);
 
@@ -207,7 +277,7 @@ class GitOperator {
   }
 
   // 合并分支
-  merge(branch, options = {}) {
+  merge(branch: string, options: MergeOptions = {}): GitExecResult {
     const args = [branch];
     if (options.ffOnly) args.push('--ff-only');
 
@@ -215,36 +285,36 @@ class GitOperator {
   }
 
   // 合并 FETCH_HEAD（配合 fetchFromUrl 使用）
-  mergeFetchHead(options = {}) {
+  mergeFetchHead(options: MergeOptions = {}): GitExecResult {
     const args = ['FETCH_HEAD'];
     if (options.ffOnly) args.push('--ff-only');
     return this.exec('merge', args);
   }
 
   // 变基到指定提交/引用
-  rebase(onto) {
+  rebase(onto: string): GitExecResult {
     return this.exec('rebase', [onto]);
   }
 
   // 终止变基
-  rebaseAbort() {
+  rebaseAbort(): GitExecResult {
     return this.exec('rebase', ['--abort']);
   }
 
   // 显示状态
-  status() {
+  status(): GitExecResult {
     return this.exec('status');
   }
 
   // 是否存在需要提交的更改（工作区或暂存区）
-  hasChanges() {
+  hasChanges(): boolean {
     const result = this.exec('status', ['--porcelain'], { silent: true });
     if (!result.success) return false;
     return (result.output || '').trim().length > 0;
   }
 
   // 显示日志
-  log(options = {}) {
+  log(options: LogOptions = {}): GitExecResult {
     const args = ['--oneline', '--graph'];
     if (options.number) args.push(`-${options.number}`);
 
@@ -252,13 +322,13 @@ class GitOperator {
   }
 
   // 获取所有远程分支
-  getAllRemoteBranches(remote = 'origin') {
+  getAllRemoteBranches(remote: string = 'origin'): string[] {
     const result = this.exec('branch', ['-r'], { silent: true });
     if (!result.success) return [];
 
-    const branches = [];
+    const branches: string[] = [];
     const prefix = `${remote}/`;
-    result.output.split('\n').forEach((line) => {
+    result.output?.split('\n').forEach((line) => {
       const branch = line.trim();
       if (branch && branch.startsWith(prefix) && !branch.includes('HEAD')) {
         // 移除 remote/ 前缀，只保留分支名
@@ -273,12 +343,12 @@ class GitOperator {
   }
 
   // 获取所有本地分支
-  getAllLocalBranches() {
+  getAllLocalBranches(): string[] {
     const result = this.exec('branch', [], { silent: true });
     if (!result.success) return [];
 
-    const branches = [];
-    result.output.split('\n').forEach((line) => {
+    const branches: string[] = [];
+    result.output?.split('\n').forEach((line) => {
       const branch = line.trim().replace(/^\*\s*/, '');
       if (branch) {
         branches.push(branch);
@@ -289,12 +359,12 @@ class GitOperator {
   }
 
   // 获取所有tag
-  getAllTags() {
+  getAllTags(): string[] {
     const result = this.exec('tag', ['-l'], { silent: true });
     if (!result.success) return [];
 
-    const tags = [];
-    result.output.split('\n').forEach((line) => {
+    const tags: string[] = [];
+    result.output?.split('\n').forEach((line) => {
       const tag = line.trim();
       if (tag) {
         tags.push(tag);
@@ -305,8 +375,12 @@ class GitOperator {
   }
 
   // 推送所有分支到指定URL
-  pushAllBranches(url, remote = 'origin', options = {}) {
-    const args = [];
+  pushAllBranches(
+    url: string,
+    remote: string = 'origin',
+    options: PushAllBranchesOptions = {},
+  ): GitExecResult {
+    const args: string[] = [];
 
     // 推送所有分支: 使用引用规范推送远程分支引用
     if (options.mirror) {
@@ -334,8 +408,8 @@ class GitOperator {
   }
 
   // 推送所有tag到指定URL
-  pushAllTags(url, options = {}) {
-    const args = [];
+  pushAllTags(url: string, options: PushOptions = {}): GitExecResult {
+    const args: string[] = [];
     if (options.forceWithLease) args.push('--force-with-lease');
     else if (options.force) args.push('--force');
 
@@ -347,7 +421,7 @@ class GitOperator {
   }
 
   // 从远程仓库获取所有分支和tag
-  fetchAllFromRemote(remote = 'origin') {
+  fetchAllFromRemote(remote: string = 'origin'): GitExecResult {
     // 只从指定的远程获取所有分支和tag
     // 使用 --tags 获取所有tag，不指定分支则获取所有分支
     const args = [remote, '--tags'];
@@ -355,4 +429,4 @@ class GitOperator {
   }
 }
 
-module.exports = GitOperator;
+export default GitOperator;

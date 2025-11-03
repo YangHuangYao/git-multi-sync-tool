@@ -1,22 +1,26 @@
 {
   "name": "git-multi-sync-tool",
-  "version": "1.0.3",
+  "version": "1.0.5",
   "description": "基于文本配置的Git多仓库同步工具，支持一键推送到多个远程仓库",
-  "main": "lib/sync-engine.js",
+  "main": "dist/lib/sync-engine.js",
   "bin": {
-    "git-sync": "./bin/git-sync.js",
-    "gits": "./bin/git-sync.js"
+    "git-sync": "dist/bin/git-sync.js",
+    "gits": "dist/bin/git-sync.js"
   },
   "scripts": {
+    "build": "tsc",
+    "clean": "node -e \"require('fs').rmSync('dist', {recursive: true, force: true})\"",
+    "check-version": "node scripts/check-npm-version.js",
+    "check-auth": "node scripts/check-npm-auth.js",
+    "prepublishOnly": "npm run check-auth && npm run check-version && npm run clean && npm run build && npm test",
     "test": "node test/simple-test.js",
     "test:full": "node scripts/test-publish.js",
     "test:debug": "node scripts/debug-commit.js",
-    "prepublishOnly": "npm test",
     "dry-run": "npm pack --dry-run",
     "version:patch": "npm version patch",
     "version:minor": "npm version minor",
     "version:major": "npm version major",
-    "release": "npm test && npm publish"
+    "release": "npm run build && npm test && npm publish"
   },
   "keywords": [
     "git",
@@ -32,7 +36,7 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/YangHuangYao/git-sync-tool"
+    "url": "git+https://github.com/YangHuangYao/git-sync-tool.git"
   },
   "bugs": {
     "url": "https://github.com/YangHuangYao/git-sync-tool/issues"
@@ -42,8 +46,7 @@
     "node": ">=14.14.0"
   },
   "files": [
-    "bin/",
-    "lib/",
+    "dist/",
     "README.md",
     "LICENSE"
   ],
@@ -53,6 +56,9 @@
     "fs-extra": "^11.1.0"
   },
   "devDependencies": {
-    "mock-fs": "^5.1.4"
+    "@types/fs-extra": "^11.0.4",
+    "@types/node": "^20.10.0",
+    "mock-fs": "^5.1.4",
+    "typescript": "^5.3.3"
   }
 }

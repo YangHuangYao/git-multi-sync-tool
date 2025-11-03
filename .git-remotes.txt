@@ -1,2 +1,0 @@
-http://example.com/a/address-list.git
-http://example.org/a/address-list.git

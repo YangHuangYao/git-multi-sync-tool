@@ -8,17 +8,17 @@ console.log('🔧 极简发布测试');
 // 检查基本文件
 const files = [
   'package.json',
-  'README.md', 
-  'bin/git-sync.js',
-  'lib/config-loader.js',
-  'lib/git-operator.js',
-  'lib/sync-engine.js'
+  'README.md',
+  'dist/bin/git-sync.js',
+  'dist/lib/config-loader.js',
+  'dist/lib/git-operator.js',
+  'dist/lib/sync-engine.js',
 ];
 
 console.log('\n📁 文件检查:');
 let allOk = true;
 
-files.forEach(file => {
+files.forEach((file) => {
   if (fs.existsSync(file)) {
     console.log(`✅ ${file}`);
   } else {
@@ -32,8 +32,8 @@ console.log('\n📦 包配置检查:');
 try {
   const pkg = JSON.parse(fs.readFileSync('package.json', 'utf8'));
   const required = ['name', 'version', 'description', 'main', 'bin'];
-  
-  required.forEach(field => {
+
+  required.forEach((field) => {
     if (pkg[field]) {
       console.log(`✅ ${field}: ${pkg[field]}`);
     } else {
@@ -49,7 +49,9 @@ try {
 // 测试命令行
 console.log('\n❓ 命令行测试:');
 try {
-  const output = execSync('node bin/git-sync.js --help', { encoding: 'utf8' });
+  const output = execSync('node dist/bin/git-sync.js --help', {
+    encoding: 'utf8',
+  });
   if (output.includes('Usage:')) {
     console.log('✅ 命令行工作正常');
   } else {

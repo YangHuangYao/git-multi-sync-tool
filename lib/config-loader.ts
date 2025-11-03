@@ -1,19 +1,43 @@
-const fs = require('fs-extra');
-const path = require('path');
-const chalk = require('chalk');
+import * as fs from 'fs-extra';
+import * as path from 'path';
+import chalk from 'chalk';
+
+export interface RemoteConfig {
+  name: string;
+  url: string;
+  enabled: boolean;
+  lineNumber: number;
+}
+
+export interface ConfigResult {
+  exists: boolean;
+  remotes: RemoteConfig[];
+  configPath?: string;
+  configFile?: string;
+  error?: string;
+}
+
+export interface ValidationResult {
+  valid: boolean;
+  error?: string;
+  config?: ConfigResult;
+}
+
+export interface GitUrlValidation {
+  valid: boolean;
+  reason?: string;
+}
 
 class ConfigLoader {
-  constructor() {
-    this.configFiles = [
-      '.git-remotes.txt',
-      'git-remotes.txt',
-      '.git-remotes',
-      'git-remotes',
-    ];
-  }
+  private configFiles: string[] = [
+    '.git-remotes.txt',
+    'git-remotes.txt',
+    '.git-remotes',
+    'git-remotes',
+  ];
 
   // 查找配置文件
-  findConfigFile(projectPath = process.cwd()) {
+  findConfigFile(projectPath: string = process.cwd()): string | null {
     for (const configFile of this.configFiles) {
       const configPath = path.join(projectPath, configFile);
       if (fs.existsSync(configPath)) {
@@ -24,7 +48,7 @@ class ConfigLoader {
   }
 
   // 读取并解析配置文件
-  loadConfig(projectPath = process.cwd()) {
+  loadConfig(projectPath: string = process.cwd()): ConfigResult {
     const configPath = this.findConfigFile(projectPath);
 
     if (!configPath) {
@@ -49,15 +73,15 @@ class ConfigLoader {
       return {
         exists: true,
         remotes: [],
-        error: `配置文件读取失败: ${error.message}`,
+        error: `配置文件读取失败: ${(error as Error).message}`,
       };
     }
   }
 
   // 解析配置文件内容
-  parseConfigContent(content, configPath) {
+  parseConfigContent(content: string, configPath: string): RemoteConfig[] {
     const lines = content.split('\n');
-    const remotes = [];
+    const remotes: RemoteConfig[] = [];
     let lineNumber = 0;
 
     for (const line of lines) {
@@ -85,7 +109,12 @@ class ConfigLoader {
   }
 
   // 解析单行配置
-  parseRemoteLine(line, lineNumber, currentIndex, existingNames = []) {
+  parseRemoteLine(
+    line: string,
+    lineNumber: number,
+    currentIndex: number,
+    existingNames: string[] = [],
+  ): RemoteConfig | null {
     let remoteName = '';
     let remoteUrl = '';
 
@@ -135,7 +164,11 @@ class ConfigLoader {
   }
 
   // 生成远程仓库名称
-  generateRemoteName(url, index, existingNames = []) {
+  generateRemoteName(
+    url: string,
+    index: number,
+    existingNames: string[] = [],
+  ): string {
     // 尝试从URL提取有意义的名称
     try {
       const urlMatch = url.match(/\/([^\/]+?)\.git$/);
@@ -164,7 +197,7 @@ class ConfigLoader {
   }
 
   // 强校验Git URL（返回原因）
-  validateGitUrl(url) {
+  validateGitUrl(url: string): GitUrlValidation {
     if (!url || typeof url !== 'string') {
       return { valid: false, reason: 'URL为空或类型错误' };
     }
@@ -196,12 +229,12 @@ class ConfigLoader {
   }
 
   // 兼容旧方法（保留API）
-  isValidGitUrl(url) {
+  isValidGitUrl(url: string): boolean {
     return this.validateGitUrl(url).valid;
   }
 
   // 创建示例配置文件
-  createSampleConfig(projectPath = process.cwd()) {
+  createSampleConfig(projectPath: string = process.cwd()): string {
     const sampleContent = `# Git多仓库同步配置文件
 # 每行一个远程仓库URL，支持多种格式：
 
@@ -231,7 +264,7 @@ backup https://gitee.com/username/repo1.git
   }
 
   // 验证配置文件
-  validateConfig(projectPath = process.cwd()) {
+  validateConfig(projectPath: string = process.cwd()): ValidationResult {
     const config = this.loadConfig(projectPath);
 
     if (!config.exists) {
@@ -264,4 +297,4 @@ backup https://gitee.com/username/repo1.git
   }
 }
 
-module.exports = new ConfigLoader();
+export default new ConfigLoader();

@@ -13,6 +13,7 @@
 - 🌍 **灵活配置**：支持多种 URL 格式和远程仓库命名
 - 📦 **全局安装**：一次安装，所有项目可用
 - 🔍 **状态查看**：实时查看配置和同步状态
+- 💻 **TypeScript 开发**：完整的类型定义和编译时类型检查
 
 ## 🚀 快速开始
 
@@ -21,6 +22,9 @@
 ```bash
 # 全局安装
 npm install -g git-multi-sync-tool
+
+# 或使用 pnpm
+pnpm install -g git-multi-sync-tool
 ```
 
 ### 使用
@@ -43,7 +47,10 @@ git-sync config
 # 5. 设置远程仓库（首次使用）
 git-sync setup
 
-# 6. 推送到所有仓库
+# 6. 提交代码到所有仓库
+git-sync commit "feat: add new feature"
+
+# 7. 推送到所有仓库
 git-sync push
 ```
 
@@ -238,7 +245,8 @@ origin-3 https://gitlab.com/user/repo.git
 ## 📦 项目信息
 
 - **名称**: git-multi-sync-tool
-- **版本**: 1.0.3
+- **版本**: 1.0.5
+- **技术栈**: TypeScript + Node.js
 - **仓库**: https://github.com/YangHuangYao/git-sync-tool
 - **问题反馈**: https://github.com/YangHuangYao/git-sync-tool/issues
 - **许可证**: MIT
@@ -248,6 +256,37 @@ origin-3 https://gitlab.com/user/repo.git
 欢迎提交问题和 Pull Request！
 
 ## 📝 更新日志
+
+### v1.1.0
+
+- 🔄 **全面迁移至 TypeScript**：所有源代码已从 JavaScript 转换为 TypeScript
+- ✨ **完整的类型定义**：为所有模块添加了完整的 TypeScript 接口和类型定义
+- 🛡️ **类型安全**：启用严格模式编译，提供编译时类型检查
+- 📦 **构建优化**：
+  - 添加 TypeScript 编译配置（tsconfig.json）
+  - 优化构建脚本，支持跨平台清理命令
+  - 生成类型声明文件（.d.ts）和源码映射（.map）
+- 🧹 **代码清理**：删除旧的 JavaScript 源文件和未使用的代码
+- 🔧 **修复问题**：
+  - 修复 chalk 模块导入问题
+  - 修复类型定义相关问题
+  - 优化模块导入导出结构
+- 📚 **开发体验提升**：更好的 IDE 支持和代码补全
+
+### v1.0.5
+
+- 🔐 **发布安全检查**：新增 npm 发布前的自动检查机制
+  - 添加版本冲突检查：防止重复发布相同版本
+  - 添加认证状态检查：确保已登录且拥有发布权限
+  - 自动验证包维护者权限
+- 🛠️ **发布流程优化**：
+  - 优化 `prepublishOnly` 脚本，包含完整的发布前检查流程
+  - 修复 `package.json` 格式问题（bin 路径和 repository URL）
+  - 提供友好的错误提示和解决方案
+- 📝 **文档完善**：
+  - 新增 `PUBLISH.md` 发布指南文档
+  - 详细说明发布流程和常见问题解决方案
+  - 添加发布前检查清单
 
 ### v1.0.3
 

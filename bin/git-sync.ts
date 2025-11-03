@@ -1,13 +1,39 @@
 #!/usr/bin/env node
-const { program } = require('commander');
-const chalk = require('chalk');
-const SyncEngine = require('../lib/sync-engine');
-const configLoader = require('../lib/config-loader');
+import { program } from 'commander';
+import chalk from 'chalk';
+import SyncEngine from '../lib/sync-engine';
+import configLoader from '../lib/config-loader';
+import * as fs from 'fs';
+import * as path from 'path';
+
+// 兼容编译前后的路径
+// 编译后 __dirname 是 dist/bin，需要向上一级到 dist，再向上一级到根目录
+// 开发时 __dirname 是 bin，直接向上一级到根目录
+function findPackageJson(): any {
+  let currentDir = __dirname;
+  // 如果在 dist 目录中，向上两级
+  if (currentDir.includes('dist')) {
+    currentDir = path.join(currentDir, '..', '..');
+  } else {
+    // 否则向上一级
+    currentDir = path.join(currentDir, '..');
+  }
+  const packageJsonPath = path.join(currentDir, 'package.json');
+  if (!fs.existsSync(packageJsonPath)) {
+    // 如果还找不到，尝试当前工作目录
+    return JSON.parse(
+      fs.readFileSync(path.join(process.cwd(), 'package.json'), 'utf-8'),
+    );
+  }
+  return JSON.parse(fs.readFileSync(packageJsonPath, 'utf-8'));
+}
+
+const packageJson = findPackageJson();
 
 program
   .name('git-sync')
   .description('Git多仓库同步工具 - 基于文本配置文件')
-  .version(require('../package.json').version);
+  .version(packageJson.version);
 
 // 初始化命令
 program
@@ -19,7 +45,7 @@ program
       console.log(chalk.green(`✅ 示例配置文件已创建: ${configPath}`));
       console.log(chalk.cyan('\n请编辑该文件，添加您的远程仓库URL'));
     } catch (error) {
-      console.error(chalk.red('创建配置文件失败:'), error.message);
+      console.error(chalk.red('创建配置文件失败:'), (error as Error).message);
     }
   });
 
@@ -32,7 +58,7 @@ program
       const engine = new SyncEngine();
       engine.showConfig();
     } catch (error) {
-      console.error(chalk.red('显示配置失败:'), error.message);
+      console.error(chalk.red('显示配置失败:'), (error as Error).message);
     }
   });
 
@@ -45,7 +71,7 @@ program
       const engine = new SyncEngine();
       engine.setupRemotes();
     } catch (error) {
-      console.error(chalk.red('设置远程仓库失败:'), error.message);
+      console.error(chalk.red('设置远程仓库失败:'), (error as Error).message);
     }
   });
 
@@ -64,12 +90,12 @@ program
     '非快进时的处理: skip|rebase|force-with-lease|force',
     'skip',
   )
-  .action((message, options) => {
+  .action((message: string, options: any) => {
     try {
       const engine = new SyncEngine();
       engine.syncCommit(message, options);
     } catch (error) {
-      console.error(chalk.red('提交失败:'), error.message);
+      console.error(chalk.red('提交失败:'), (error as Error).message);
     }
   });
 
@@ -86,12 +112,12 @@ program
     '非快进时的处理: skip|rebase|force-with-lease|force',
     'skip',
   )
-  .action((options) => {
+  .action((options: any) => {
     try {
       const engine = new SyncEngine();
       engine.pushAll(options);
     } catch (error) {
-      console.error(chalk.red('推送失败:'), error.message);
+      console.error(chalk.red('推送失败:'), (error as Error).message);
     }
   });
 
@@ -101,12 +127,12 @@ program
   .description('从所有配置的远程仓库拉取')
   .option('-r, --rebase', '使用rebase方式合并')
   .option('--merge-mirrors', '对镜像远程执行合并（默认仅fetch）')
-  .action((options) => {
+  .action((options: any) => {
     try {
       const engine = new SyncEngine();
       engine.pullAll(options);
     } catch (error) {
-      console.error(chalk.red('拉取失败:'), error.message);
+      console.error(chalk.red('拉取失败:'), (error as Error).message);
     }
   });
 
@@ -119,7 +145,7 @@ program
       const engine = new SyncEngine();
       engine.fetchAll();
     } catch (error) {
-      console.error(chalk.red('获取失败:'), error.message);
+      console.error(chalk.red('获取失败:'), (error as Error).message);
     }
   });
 
@@ -132,7 +158,7 @@ program
       const engine = new SyncEngine();
       engine.showStatus();
     } catch (error) {
-      console.error(chalk.red('状态检查失败:'), error.message);
+      console.error(chalk.red('状态检查失败:'), (error as Error).message);
     }
   });
 
@@ -143,12 +169,12 @@ program
   .option('-s, --source <remote>', '源远程仓库名称（默认: origin）', 'origin')
   .option('-f, --force', '强制推送')
   .option('--force-with-lease', '使用更安全的force-with-lease')
-  .action((targetUrl, options) => {
+  .action((targetUrl: string, options: any) => {
     try {
       const engine = new SyncEngine();
       engine.syncAllToRemote(targetUrl, options.source, options);
     } catch (error) {
-      console.error(chalk.red('同步失败:'), error.message);
+      console.error(chalk.red('同步失败:'), (error as Error).message);
     }
   });
 
