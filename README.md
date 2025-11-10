@@ -263,6 +263,20 @@ origin-3 https://gitlab.com/user/repo.git
 
 ## 📝 更新日志
 
+### v1.0.7
+
+- ✨ 项目初始化
+- 🔧 测试修复bug
+- 📝 upd: 更新环境检查node版本调试推荐最优版本
+- 📝 upd: 更新版本
+- 📝 upd: 更新typescript版本
+- 📝 upd: 更新文档
+- 📝 upd: 增加一个全量仓库同步到指定远程仓库的功能
+- 📝 upd: 更新调试提交有冲突的提交导致不能正常提交的bug
+- 📝 upd: 版本更新
+- 📝 upd: 更新bug调试
+- 📝 upd: 调试
+- 📝 Initial commit
 ### v1.0.6
 
 - ✨ 项目初始化
