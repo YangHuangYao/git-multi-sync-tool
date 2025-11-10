@@ -8,6 +8,7 @@
     "gits": "dist/bin/git-sync.js"
   },
   "scripts": {
+    "preinstall": "node scripts/check-node-version.js",
     "build": "tsc",
     "clean": "node -e \"require('fs').rmSync('dist', {recursive: true, force: true})\"",
     "check-version": "node scripts/check-npm-version.js",
@@ -46,7 +47,7 @@
   },
   "homepage": "https://github.com/samuelyhy/git-multi-sync-tool#readme",
   "engines": {
-    "node": ">=14.14.0"
+    "node": ">=20.10.0"
   },
   "files": [
     "dist/",
